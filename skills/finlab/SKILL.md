@@ -323,6 +323,20 @@ prev_close = close.shift(1)
 
 See [best-practices.md](best-practices.md) for more anti-patterns.
 
+## Performance Defaults
+
+**Default to lazy + batch; only drop to plain pandas when debugging.** Production/strategy code should use `df.lazy()` (polars-backed lazy evaluation) and `data.gets()` (parallel batch download) — both landed in v2.0.0 and cut end-to-end runtime materially. Switch back to `data.get()` + regular pandas only when you need to print/inspect intermediate values interactively.
+
+```python
+# ✅ Default: batch fetch + lazy compute
+frames = data.gets(['price:收盤價', 'price:成交股數', 'price_earning_ratio:本益比'])
+close = frames['price:收盤價'].lazy()
+
+# ✅ Debug: plain pandas for row-level inspection
+close = data.get('price:收盤價')
+print(close.loc['2024-01-15', '2330'])
+```
+
 ## Feedback
 
 Direct users to open an issue on GitHub: https://github.com/koreal6803/finlab-ai/issues
