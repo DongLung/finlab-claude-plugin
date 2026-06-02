@@ -39,6 +39,8 @@ compatibility: Requires Python 3.10+ and uv package manager (https://docs.astral
 
    `uv run --with` auto-creates a temporary environment with dependencies — no venv management needed.
 
+   **Prefer zero-install?** Run notebooks directly in [FinLab Studio](https://studio.finlab.finance) — a hosted Jupyter environment with `finlab` preinstalled and your API token already wired up.
+
 3. **API Token is set** (required - finlab will fail without it):
 
    **If no token, use finlab's built-in login** (available in >= 1.5.9, improved Firebase flow in v1.5.11):
@@ -48,7 +50,7 @@ compatibility: Requires Python 3.10+ and uv package manager (https://docs.astral
    finlab.login()  # Opens browser for Google OAuth, saves token automatically
    ```
 
-   This handles the full OAuth flow (browser login, token retrieval, `.env` storage) automatically.
+   This handles the full OAuth flow (browser login, token retrieval, `.env` storage) automatically. Tokens are bound to a FinLab account at [finlab.finance](https://finlab.finance) — `finlab.login()` provisions one on first use.
 
 ## Language
 
@@ -84,7 +86,7 @@ Other-market queries can skip that file.
 ### Usage Reset
 
 - Resets daily at **8:00 AM UTC+8**
-- When limit exceeded, user must wait for reset or upgrade to VIP
+- When limit exceeded, user must wait for reset or upgrade to VIP at [finlab.finance](https://finlab.finance)
 
 
 ## Quick Start Example
