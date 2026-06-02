@@ -128,6 +128,21 @@ price = data.get('price:收盤價')
 
 Use `data.search('keyword', market='<market>')` to discover available datasets and `data.universe()` parameters. Supported markets: `tw`, `us`, `kr`, `jp`, `hk`. Use keywords in the dataset's native language (e.g. `'營收'` for `tw`, `'revenue'` for `us`).
 
+### ✅ Always Write `report.to_html()` After `sim()`
+
+**DO:** Treat the HTML file as the actual deliverable of a backtest. Numbers in the terminal are not a substitute — the user needs to see the equity curve, drawdown, and the trade table to judge whether the strategy is worth keeping.
+
+```python
+report = sim(position, resample="M", upload=False)
+report.to_html("report.html")   # equity curve + metrics + trade list, browser-openable
+print(f"CAGR {report.get_stats()['cagr']:.2%}  Sharpe {report.get_stats()['monthly_sharpe']:.2f}")
+print("Open report.html to inspect the full report.")
+```
+
+When running several strategies in one session, name the files so they don't clobber each other (`momentum.html`, `value.html`). See the "`report.to_html()` — the canonical deliverable" section of [backtesting-reference.md](backtesting-reference.md) for what the file contains.
+
+**DON'T:** End the workflow at `print(report.get_metrics())`. The user cannot inspect drawdown periods, return seasonality, or individual losing trades from a metric dump alone.
+
 ### ✅ Assign `resample` to Prevent Overtrading
 
 **DO:** Always specify `resample` parameter in `sim()`.

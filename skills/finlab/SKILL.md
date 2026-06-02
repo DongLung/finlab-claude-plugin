@@ -58,7 +58,9 @@ compatibility: Requires Python 3.10+ and uv package manager (https://docs.astral
 
 ## Market Support
 
-FinLab supports TW (default), US, KR, JP, and HK markets. The rest of this file plus [dataframe-reference.md](dataframe-reference.md), [backtesting-reference.md](backtesting-reference.md), [best-practices.md](best-practices.md), [factor-analysis-reference.md](factor-analysis-reference.md), and [machine-learning-reference.md](machine-learning-reference.md) are **market-agnostic** — the APIs behave the same across markets.
+FinLab supports TW (default), US, KR, JP, HK, plus Taiwan emerging (`rotc`) and Taiwan convertible bonds (`tw_cb`). Pick the market once per session with `data.set_market(<code>)`; generic dataset names like `price:收盤價` or `monthly_revenue:當月營收` resolve to the active market's tables, so strategy code is written the same way across markets. `data.set_market('rotc')` *(v2.0.9)* enables 興櫃 (TW emerging) — use it when you need pre-listing price action or revenue factors that don't exist in the main TSE/OTC catalog.
+
+The rest of this file plus [dataframe-reference.md](dataframe-reference.md), [backtesting-reference.md](backtesting-reference.md), [best-practices.md](best-practices.md), [factor-analysis-reference.md](factor-analysis-reference.md), and [machine-learning-reference.md](machine-learning-reference.md) are **market-agnostic** — the APIs behave the same across markets.
 
 For US-market work — whether single-name equities (`data.set_market('us')`) or ETFs/funds (`data.set_market('us_fund')`) — **read [us-market.md](us-market.md) first**. Queries that should trigger it include: US equity, S&P 500, NASDAQ 100, 美股, SPY / QQQ, sector SPDRs, leveraged / inverse ETFs, ETF rotation, `us_price:*`, `us_fund_price:*`, `data.us_universe(...)`, or `us_income_statement:*` / `us_cash_flow:*` / `us_balance_sheet:*`. It documents:
 
@@ -125,7 +127,9 @@ print(f"CAGR: {stats['cagr']:.2%}")
 print(f"Sharpe: {stats['monthly_sharpe']:.2f}")
 print(f"MDD: {stats['max_drawdown']:.2%}")
 
-report
+# 6. Hand the user a self-contained HTML deliverable (REQUIRED)
+report.to_html("report.html")
+print("Open report.html to inspect equity curve, monthly returns, drawdown, and trade list.")
 ```
 
 ## Core Workflow: 5-Step Strategy Development
@@ -253,6 +257,20 @@ print(f"MDD: {stats['max_drawdown']:.2%}")     # same name
 
 See [backtesting-reference.md](backtesting-reference.md) for complete `sim()` API.
 
+### Step 4.5: Deliver an HTML Report (REQUIRED)
+
+Every backtest call must be followed by `report.to_html("report.html")`. This is the canonical deliverable a user opens to review a strategy — a single self-contained file with the equity curve, drawdown chart, monthly/annual return tables, full metric breakdown (CAGR, Sharpe, MDD, win rate, etc.), and the trade-by-trade table with entry/exit dates, prices, P&L, MAE/MFE. Printing metrics alone is not a deliverable; the user needs visuals to evaluate the strategy.
+
+```python
+report = sim(position, resample="M", upload=False)
+report.to_html("report.html")            # always write the file
+# print summary stats to the terminal too, but the HTML is the artifact
+```
+
+Pick a descriptive filename when running more than one strategy in the same session (e.g. `momentum_top10.html`, `value_lowpb.html`) so the user can compare without overwriting. After writing, tell the user the path so they can open it. Use `report.to_terminal()` only as a supplement for non-GUI terminals; it does not replace the HTML.
+
+See the "`report.to_html()` — the canonical deliverable" section of [backtesting-reference.md](backtesting-reference.md) for details on what the file contains.
+
 ### Step 5: Execute Orders (Optional)
 
 Convert backtest results to live trading:
@@ -293,6 +311,19 @@ See [trading-reference.md](trading-reference.md) for complete broker setup and O
 ## What's New (since v1.5.8)
 
 Short version pointers for features added in recent releases. Each reference file tags the exact API with `(vX.Y.Z)`.
+
+**v2.0.12** (2026-06-01)
+- `sim()` / `hold_until()`: `trail_stop_activation` — require a minimum unrealized gain before `trail_stop` arms. See [backtesting-reference.md](backtesting-reference.md) and [dataframe-reference.md](dataframe-reference.md)
+- `report.to_html(path, title=...)`: standalone HTML now sets browser-tab title + FinLab favicon; pass `title` to disambiguate multi-strategy report folders — see [backtesting-reference.md](backtesting-reference.md)
+- Dashboard settings modal: language / light-dark theme / candle color scheme (default, east-red, west-green) consolidated into one panel
+
+**v2.0.9** (2026-05-27)
+- `data.set_market("rotc")`: 興櫃 is now a first-class market code; `price:收盤價` / `monthly_revenue:*` / etc. resolve to the `rotc_` catalog and `sim()` uses `ROTCMarket` defaults
+- `data.search(market="rotc")`: scoped to the emerging-market catalog only
+
+**v2.0.1** (2026-04-26)
+- `python -m finlab cloud` *(CLI)*: deploy strategies to the `finlab-auto-update` Cloud Functions runtime with daily Asia/Taipei scheduling — `deploy`, `get`, `list`, `run`, `logs`, `schedule set/delete`, `delete`, `status`. See [trading-reference.md](trading-reference.md#cloud-strategy-deployment--python--m-finlab-cloud-v201)
+- `sim()` peak RSS ~800 MB lower on full-market monthly strategies (was ~2.0–2.2 GiB → ~1.29 GiB); enables s-tier cloud workers that previously OOM'd
 
 **v2.0.0** (2026-04-04) — major release
 - `finlab.exceptions`: structured error hierarchy (`FinlabError`, `DataError`, `BacktestError`, ...) — see [backtesting-reference.md](backtesting-reference.md)

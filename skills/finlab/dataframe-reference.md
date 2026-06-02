@@ -441,6 +441,8 @@ hold_until(
     nstocks_limit: int = None,
     stop_loss: float = -np.inf,
     take_profit: float = np.inf,
+    trail_stop: float | None = None,
+    trail_stop_activation: float | None = None,
     trade_at: str = 'close',
     rank: pd.DataFrame = None
 ) -> FinlabDataFrame
@@ -451,6 +453,8 @@ hold_until(
 - `nstocks_limit` (int, optional): Maximum number of stocks to hold simultaneously
 - `stop_loss` (float, optional, default=-np.inf): Stop loss threshold (e.g., 0.1 = exit if down 10%)
 - `take_profit` (float, optional, default=np.inf): Take profit threshold (e.g., 0.2 = exit if up 20%)
+- `trail_stop` (float, optional): Trailing-stop drawdown from the running peak; exits the long position once price falls this fraction below its post-entry high
+- `trail_stop_activation` (float, optional, *v2.0.12*): Unrealized-gain threshold the position must reach before `trail_stop` arms. Until this gain is hit, only the static `stop_loss` applies. Useful when you want winners to clear entry noise (e.g. +10 %) before the trail starts ratcheting
 - `trade_at` (str, optional, default='close'): Price reference for stop/take profit ('close' or 'open')
 - `rank` (pd.DataFrame, optional): Ranking DataFrame for prioritizing entries when limit is reached (higher = priority)
 

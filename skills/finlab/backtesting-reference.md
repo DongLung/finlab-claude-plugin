@@ -29,6 +29,7 @@ sim(
     stop_loss: Union[float, None] = None,
     take_profit: Union[float, None] = None,
     trail_stop: Union[float, None] = None,
+    trail_stop_activation: Union[float, None] = None,
     touched_exit: bool = False,
     retain_cost_when_rebalance: bool = False,
     stop_trading_next_period: bool = True,
@@ -99,6 +100,11 @@ sim(
 - **Type:** `Union[float, None]`
 - **Default:** `None`
 - **Description:** Trailing stop threshold. If set to None, trailing stop is disabled.
+
+#### trail_stop_activation *(v2.0.12)*
+- **Type:** `Union[float, None]`
+- **Default:** `None`
+- **Description:** Unrealized-profit threshold (as a fraction, e.g. `0.05` = +5 %) that a position must reach before `trail_stop` is armed. While the position has not yet hit this gain, the trailing stop is dormant and only the static `stop_loss` (if set) applies. Once the gain is reached, the trail begins watermarking from the running peak as usual. `None` or `0` preserves the pre-2.0.12 behavior of arming `trail_stop` immediately. Works for both long and short positions in `sim()`; on `hold_until()` it controls the long-rotation trailing-take-profit path. Use this to let winners run past entry noise without giving back gains once a real trend forms — e.g. `trail_stop=0.08, trail_stop_activation=0.10` means "do nothing until +10 %, then trail 8 % off the high".
 
 #### touched_exit
 - **Type:** `bool`
@@ -200,27 +206,56 @@ print(metrics['risk']['maxDrawdown'])
 - `winrate` - winRate, m12WinRate, expectancy, mae, mfe
 - `liquidity` - capacity, disposalStockRatio, warningStockRatio
 
+### `report.to_html()` — the canonical deliverable
+
+**Signature:**
+```python
+report.to_html(path: str, title: str | None = None) -> None
+```
+
+**Parameters:**
+- `path` (str, required): output file path; pass a `.html` filename, the file is written in place
+- `title` (str, optional, *v2.0.12*): browser-tab title for the exported page. Defaults to the strategy name. Set this when delivering several reports so the user can tell tabs apart at a glance. The FinLab favicon is bundled into the file automatically (also v2.0.12).
+
+**What the file contains:** a single self-contained HTML page (open in any browser, no server) with
+- equity curve and benchmark overlay
+- drawdown chart and drawdown table
+- monthly / annual return heatmap
+- full metric panel (CAGR, Sharpe, Sortino, Calmar, MDD, win rate, MAE/MFE, beta/alpha, capacity)
+- trade-by-trade table — entry/exit dates, prices, position size, return, holding days
+
+**When to use:** every time you finish a `sim()` call in a non-Jupyter context (script, CLI, agent run). It is the artifact the user actually opens to evaluate the strategy. Print-only summaries hide the equity curve and trade list and are not a substitute.
+
+```python
+report = sim(position, resample="M", upload=False)
+report.to_html("report.html")
+# tell the user the path; they open it in a browser
+```
+
+For multiple strategies in one session, use descriptive filenames and per-report tab titles so the user can tell them apart without opening the file:
+```python
+sim(pos_a, name="Momentum").to_html("momentum.html", title="Momentum")
+sim(pos_b, name="Value").to_html("value.html", title="Value")
+```
+
 ### Other Useful Methods
 
 ```python
-# Display interactive report
+# Display interactive report inside Jupyter / IPython only
 report.display()
 
-# Get trade details
+# Get trade details as a DataFrame (same data the HTML embeds)
 trades_df = report.get_trades()
 
-# Save to file
-report.to_html("report.html")
+# Persist the full Report object (for later re-rendering / programmatic access)
 report.to_pickle("report.pkl")
-
-# Load from file
 loaded_report = Report.from_pickle("report.pkl")
 
-# Run specific analysis
+# Run specific analysis modules (also rendered into to_html output)
 report.run_analysis("Drawdown")
 report.run_analysis("MaeMfe")
 
-# Display ASCII chart in terminal (no Jupyter needed)
+# ASCII fallback for terminals without a browser — supplement, not replacement
 report.to_terminal()
 report.to_terminal(height=8, width=60, show_benchmark=False)
 ```
@@ -371,14 +406,16 @@ Test your strategy's performance and make adjustments as needed.
 
 **Associated Methods:**
 - `backtest.sim`
-- `report.display`
+- `report.to_html` — write the HTML deliverable (always emit this)
 - `report.get_metrics`
+- `report.display` (Jupyter only)
 
 **Important Notes:**
 - Use the `sim` function to simulate performance based on your position DataFrame
 - If monthly revenue is used (as variable `rev`), please set `resample` to `rev.index`
 - If user not mention, please set `resample` to 'ME' or 'Q' to avoid overtrading
 - Use `print(report.get_metrics())` to extract performance metrics
+- **Always call `report.to_html("report.html")`** so the user has a browsable artifact with equity curve, drawdown, monthly returns, and the trade table. Print-only output is not a deliverable.
 - If scoping tradable universe at simulation time, you may wrap the backtest call with `with data.universe(...)` — but NEVER wrap factor/position calculations inside that context
 
 **Example:**
@@ -392,9 +429,9 @@ report = backtest.sim(position, resample='M')
 with data.universe(market='TSE_OTC', exclude_category='金融'):
     report = backtest.sim(position, resample='Q')
 
-# Display metrics
+# Inspect metrics + persist the HTML deliverable
 print(report.get_metrics())
-report.display()
+report.to_html("report.html")  # always emit this; the file is what the user opens
 ```
 
 ---
