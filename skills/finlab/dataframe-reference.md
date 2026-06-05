@@ -54,7 +54,9 @@ price_df = data.get('price:收盤價')  # Returns a FinlabDataFrame
 
 ### index_str_to_date
 
-Converts string-formatted financial report indices (e.g., "2022-Q1", "2022-M01") to datetime format based on actual disclosure dates. Essential for aligning financial data with daily price data.
+Converts string-formatted financial report indices (e.g., "2022-Q1", "2022-M01") to datetime format based on actual disclosure dates.
+
+For normal factor construction, you usually do not need to call this manually. FinlabDataFrame operators and boolean indexing call internal `reshape()`, which automatically applies `index_str_to_date()` when monthly or quarterly string-index data is combined with daily data, then forward-fills on the combined date grid. This is the same for Taiwan monthly/quarterly data and US quarterly fundamentals. Call `index_str_to_date()` explicitly only when you need the dated index object itself, for example to inspect disclosure dates, extract a rebalance schedule, resample, or use pandas-native operations outside FinlabDataFrame alignment.
 
 **Signature:**
 ```python
@@ -72,9 +74,13 @@ from finlab import data
 cash = data.get('financial_statement:現金及約當現金')
 print(cash.index[:3])  # ['2013-Q1', '2013-Q2', '2013-Q3']
 
-# Convert to actual disclosure dates
+# Optional: convert explicitly only when you need the dated index itself
 cash_dated = cash.index_str_to_date()
 print(cash_dated.index[:3])  # DatetimeIndex(['2013-05-15', '2013-08-14', ...])
+
+# Normal factor construction does not need explicit conversion
+close = data.get('price:收盤價')
+condition = (cash > 0) & (close > close.average(60))
 ```
 
 **Note:** This method uses actual financial statement disclosure dates from `etl:financial_statements_disclosure_dates`, not simple quarter-end dates.

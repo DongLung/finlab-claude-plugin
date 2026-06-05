@@ -180,21 +180,33 @@ condition = np.isclose(close, 100.0)
 condition = (close > 99.9) & (close < 100.1)
 ```
 
-### ❌ Don't Use `reindex()` on FinLabDataFrame
+### ❌ Don't Manually Align FinLabDataFrame Frequencies
 
-**Reason:** FinLabDataFrame already automatically aligns indices/columns.
+**Reason:** FinLabDataFrame already automatically aligns indices/columns. When monthly or quarterly string-index data is combined with daily data through FinLabDataFrame operators or boolean indexing, internal `reshape()` calls `index_str_to_date()` automatically, then forward-fills on the combined date grid. This applies to both Taiwan data such as `monthly_revenue:*` / `fundamental_features:*` and US data such as `us_income_statement:*` / `us_balance_sheet:*`.
 
 ```python
-# ❌ BAD - unnecessary reindexing
-df1 = data.get("price:收盤價")
-df2 = data.get("monthly_revenue:當月營收")
-df2_reindexed = df2.reindex(df1.index, method='ffill')  # DON'T DO THIS
+# ❌ BAD - unnecessary manual conversion/alignment
+close = data.get("price:收盤價")
+roe = data.get("fundamental_features:ROE稅後")
+roe_daily = roe.index_str_to_date().reindex(close.index, method='ffill')
+position = (close > close.average(60)) & (roe_daily > 0)
 
-# ✅ GOOD - automatic alignment
-position = df1 > df1.average(60) & (df2 > df2.shift(1))
+# ✅ GOOD - automatic PIT alignment
+position = (close > close.average(60)) & (roe > 0)
 ```
 
-**Exception:** Only use `reindex()` for position DataFrame when changing to a specific resampling schedule:
+The same pattern applies to pure quarterly factors: calculate them on the original string index first, then combine with daily conditions directly.
+
+```python
+net_income = data.get("us_income_statement:net_income")
+equity = data.get("us_balance_sheet:total_stockholders_equity")
+close = data.get("us_price:adj_close")
+
+roe = net_income / equity
+position = (roe > 0.15) & (close > 5)  # reshape() handles filing-date alignment
+```
+
+**Exception:** Use `.index_str_to_date()` when you explicitly need the dated index object for inspection, date extraction, resampling, or pandas-native operations. Use `reindex()` only for a final position DataFrame when changing to a specific resampling schedule:
 
 ```python
 # ✅ Allowed - reindex position to monthly revenue dates

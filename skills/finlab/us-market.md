@@ -75,7 +75,7 @@ pe    = price / eps.rolling(4).sum()                     # trailing-twelve-month
 
 ### 1.3 Quarterly index-format convention
 
-Quarterly tables use a string index of the form `"<YYYY>-US-Q<N>"`, e.g. `"2024-US-Q3"`. When you combine a quarterly FinlabDataFrame with a daily one (for example, `(quarterly_fcf > 0) & daily_price_condition`), FinLab converts the quarterly index to `DatetimeIndex` using each row's `key_date` and forward-fills — so a quarterly row becomes visible on the daily grid only from the filing date onward. You do not need to call `.shift()` or reassign `.index`. Just combine the DataFrames.
+Quarterly tables use a string index of the form `"<YYYY>-US-Q<N>"`, e.g. `"2024-US-Q3"`. Keep pure quarterly calculations on that string index; for example, `roe = net_income / equity` is correct and should not be manually converted first. When that quarterly result is later combined with daily data through FinlabDataFrame operators or boolean indexing, FinLab's internal `reshape()` calls `index_str_to_date()` automatically, converts rows by `key_date` / filing date, and forward-fills onto the combined daily grid. You do not need to call `.index_str_to_date()`, `.reindex(close.index, method='ffill')`, `.shift()`, or manually reassign `.index` for normal factor construction. Use `.index_str_to_date()` only when you explicitly need a dated index object, such as extracting disclosure-date rows or doing pandas-native operations outside FinlabDataFrame alignment.
 
 ### 1.4 Index-constituent history caveat
 
