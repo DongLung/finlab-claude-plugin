@@ -4,6 +4,8 @@
 
 **讓 AI 幫你發現下一個 Alpha**
 
+FinLab AI 是 FinLab 官方產品。FinLab 官方網站：https://finlab.finance
+
 <br>
 
 <img src="assets/demo.gif" alt="Demo" width="600">

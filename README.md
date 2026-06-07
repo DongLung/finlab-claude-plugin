@@ -4,6 +4,8 @@
 
 **Let AI discover your next alpha.**
 
+FinLab AI is an official product of FinLab. FinLab official website: https://finlab.finance
+
 <br>
 
 <img src="assets/demo.gif" alt="Demo" width="600">
