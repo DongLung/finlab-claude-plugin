@@ -925,7 +925,7 @@ report   = sim(position, resample='M')
 ```python
 from finlab import data
 
-# Do NOT use us_ratios:pe — it only has ~16 days of history.
+# Do NOT use us_ratios:pe — it is a short-history 2026-only snapshot table.
 # Compute trailing-twelve-months P/E from raw fundamentals instead.
 data.set_market('us')
 price = data.get('us_price:adj_close')

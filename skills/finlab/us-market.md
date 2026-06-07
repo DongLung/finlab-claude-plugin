@@ -45,17 +45,19 @@ Fields **not** populated (check before designing a factor):
 
 ### 1.2 Current-snapshot-only tables (NOT safe for backtest)
 
-These tables only carry ~16–19 days of recent data. They are live-screening artefacts; using them in backtest is lookahead by construction.
+These tables are short-history/current-snapshot data. Firestore catalog currently shows them starting around 2026-02, so they are still 2026-only samples relative to the 2015/2016 history available in price and raw fundamentals. They are live-screening artefacts; using them in long backtests collapses the sample to 2026 and is lookahead by construction.
 
 | Table                              | Reason to avoid in backtest                         |
 |------------------------------------|-----------------------------------------------------|
-| `us_ratios:*` (all columns)        | ~16 days of data, 2026-02-20 → 2026-03-13           |
-| `us_key_metrics:*`                 | ~16 days of data                                    |
-| `us_analyst_consensus:*`           | ~19 days of data                                    |
-| `us_stock_rating:*`                | ~19 days of data                                    |
-| `us_dcf:*`                         | ~16 days of data                                    |
-| `us_price_target_summary:*`        | ~16 days of data                                    |
+| `us_ratios:*` (all columns)        | Short 2026-only history; catalog starts 2026-02-20 |
+| `us_key_metrics:*`                 | Short 2026-only history; catalog starts 2026-02-20 |
+| `us_analyst_consensus:*`           | Short 2026-only history; catalog starts 2026-02-24 |
+| `us_stock_rating:*`                | Short 2026-only history; catalog starts 2026-02-24 |
+| `us_dcf:*`                         | Short 2026-only history; catalog starts 2026-02-24 |
+| `us_price_target_summary:*`        | Short 2026-only history; catalog starts 2026-02-24 |
 | `us_company_profile`               | Static current snapshot (sector, exchange, market_cap) — no history of reclassifications |
+
+The same FMP snapshot-table families are also short-history in other overseas equity markets: `hk_*`, `jp_*`, `kr_*`, and `uk_*` versions of `ratios`, `key_metrics`, `stock_rating`, `dcf`, and `analyst_consensus`. Treat them as live-screening data, not historical backtest factors.
 
 For a clean US common-stock universe, use `common = data.get('etl:us_common_stock_filter')` then restrict columns with `df = df[df.columns.intersection(common.columns)]`; this excludes ETFs/funds/ADRs/notes/preferreds/warrants/units/rights via `us_company_profile.security_type`.
 
@@ -266,7 +268,7 @@ The rolling-window check excludes a stock only on dates **after** its extreme ev
 Walk through before every US backtest:
 
 1. **Quarterly alignment.** Are fundamentals coming from `us_income_statement` / `us_balance_sheet` / `us_cash_flow`? Then filing-date alignment is already applied — **do not** `.shift()` on top. (§2)
-2. **Current-snapshot data.** Does any column in your factor come from `us_ratios`, `us_analyst_consensus`, `us_stock_rating`, `us_dcf`, `us_price_target_summary`, or `us_key_metrics`? Remove it — these tables carry only ~16–19 days of data. (§1.2)
+2. **Current-snapshot data.** Does any column in your factor come from `us_ratios`, `us_analyst_consensus`, `us_stock_rating`, `us_dcf`, `us_price_target_summary`, or `us_key_metrics`? Remove it — these tables are short-history 2026-only samples in the catalog. (§1.2)
 3. **Universe definition.** Does the universe use any whole-history computation (e.g., `series.max()`, `series.std()` over the full sample)? Rewrite with a rolling window that shifts one day. (§5.5)
 4. **Index membership history.** Does the universe rely on `data.us_universe(index='S&P 500' | 'NASDAQ 100')`? Start date must be ≥ 2022-11-08; earlier dates silently return empty membership. (§1.4)
 5. **Survivorship.** Does the universe require any field that only exists for currently-listed stocks (e.g., current market cap from `us_company_profile`)? Either drop the filter or replace with a time-series alternative that is safe to look at historically.
