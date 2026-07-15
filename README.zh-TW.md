@@ -34,5 +34,7 @@ curl -sSf https://ai.finlab.finance/install.sh | sh
 ## 學習資源
 
 - [量化交易完整教學](https://finlab.finance/tools/quant-trading)：什麼是量化交易、台股策略回測器與平台比較。
+- [程式交易完整教學](https://finlab.finance/tools/program-trading)：程式交易怎麼運作、三組回測驗證的台股策略與自動下單路徑。
+- [股票選股完整教學](https://finlab.finance/tools/stock-selection)：因子選股實測，從單因子到多因子複合策略。
 - [策略研究部落格](https://finlab.finance/blog)：經過回測驗證的台股策略報告（CAGR、夏普、最大回撤）。
 - 官方網站：[finlab.finance](https://finlab.finance)
