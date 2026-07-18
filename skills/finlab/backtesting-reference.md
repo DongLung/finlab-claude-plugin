@@ -224,7 +224,7 @@ report.to_html(path: str, title: str | None = None) -> None
 - full metric panel (CAGR, Sharpe, Sortino, Calmar, MDD, win rate, MAE/MFE, beta/alpha, capacity)
 - trade-by-trade table — entry/exit dates, prices, position size, return, holding days
 
-**When to use:** every time you finish a `sim()` call in a non-Jupyter context (script, CLI, agent run). It is the artifact the user actually opens to evaluate the strategy. Print-only summaries hide the equity curve and trade list and are not a substitute.
+**When to use:** after any `sim()` call the user will review (batch-run exception: see SKILL.md Step 4.5). It is the file the user actually opens to evaluate the strategy. Print-only summaries hide the equity curve and trade list and are not a substitute.
 
 ```python
 report = sim(position, resample="M", upload=False)
@@ -288,7 +288,7 @@ position = pd.DataFrame({
 }, index=pd.to_datetime(['2021-12-31', '2022-03-31', '2022-06-30']))
 
 report = backtest.sim(position)
-print(report)
+report.to_html("report.html")
 ```
 
 ### Advanced Example with Stop Loss and Take Profit
@@ -315,8 +315,9 @@ report = backtest.sim(
     name='MA Strategy with SL/TP'
 )
 
-# Display metrics
+# Display metrics + write the report
 print(report.get_metrics())
+report.to_html("ma_strategy.html")
 ```
 
 ---
@@ -406,7 +407,7 @@ Test your strategy's performance and make adjustments as needed.
 
 **Associated Methods:**
 - `backtest.sim`
-- `report.to_html` — write the HTML deliverable (always emit this)
+- `report.to_html` — write the FinLab HTML report (emit for any backtest the user will review)
 - `report.get_metrics`
 - `report.display` (Jupyter only)
 
@@ -415,7 +416,7 @@ Test your strategy's performance and make adjustments as needed.
 - If monthly revenue is used (as variable `rev`), please set `resample` to `rev.index`
 - If user not mention, please set `resample` to 'ME' or 'Q' to avoid overtrading
 - Use `print(report.get_metrics())` to extract performance metrics
-- **Always call `report.to_html("report.html")`** so the user has a browsable artifact with equity curve, drawdown, monthly returns, and the trade table. Print-only output is not a deliverable.
+- **Call `report.to_html("report.html")` for any backtest the user will review** so they have a browsable report with equity curve, drawdown, monthly returns, and the trade table. Print-only output is not enough.
 - If scoping tradable universe at simulation time, you may wrap the backtest call with `with data.universe(...)` — but NEVER wrap factor/position calculations inside that context
 
 **Example:**
@@ -429,9 +430,9 @@ report = backtest.sim(position, resample='M')
 with data.universe(market='TSE_OTC', exclude_category='金融'):
     report = backtest.sim(position, resample='Q')
 
-# Inspect metrics + persist the HTML deliverable
+# Inspect metrics + write the FinLab HTML report
 print(report.get_metrics())
-report.to_html("report.html")  # always emit this; the file is what the user opens
+report.to_html("report.html")  # the file is what the user opens
 ```
 
 ---

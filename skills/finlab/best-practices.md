@@ -130,7 +130,7 @@ Use `data.search('keyword', market='<market>')` to discover available datasets a
 
 ### ✅ Always Write `report.to_html()` After `sim()`
 
-**DO:** Treat the HTML file as the actual deliverable of a backtest. Numbers in the terminal are not a substitute — the user needs to see the equity curve, drawdown, and the trade table to judge whether the strategy is worth keeping.
+**DO:** Treat the FinLab-generated HTML file as the actual deliverable of a backtest. Numbers in the terminal are not a substitute — the user needs to see the equity curve, drawdown, and the trade table to judge whether the strategy is worth keeping.
 
 ```python
 report = sim(position, resample="M", upload=False)
@@ -603,6 +603,7 @@ position = pb[position].is_smallest(10)
 
 # Backtest
 report = sim(position, resample="M", stop_loss=0.08, upload=False)
+report.to_html("value_momentum.html")
 print(f"Annual Return: {report.metrics.annual_return():.2%}")
 print(f"Sharpe Ratio: {report.metrics.sharpe_ratio():.2f}")
 print(f"Max Drawdown: {report.metrics.max_drawdown():.2%}")
@@ -634,6 +635,7 @@ position_resampled = position.reindex(rev.index_str_to_date().index, method="ffi
 
 # Backtest
 report = sim(position_resampled, upload=False)
+report.to_html("revenue_growth.html")
 ```
 
 ---
