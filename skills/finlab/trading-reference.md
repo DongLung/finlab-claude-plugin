@@ -451,7 +451,7 @@ python -m finlab cloud get    <sid>     # inspect metadata + inline source
 python -m finlab cloud list             # list deployed strategies
 python -m finlab cloud run    <sid>     # trigger one ad-hoc execution
 python -m finlab cloud logs   <sid>     # recent execution history
-python -m finlab cloud schedule set <sid> --time HH:MM
+python -m finlab cloud schedule set <sid> HH:MM   # e.g. schedule set my-strat 14:30
 python -m finlab cloud schedule delete <sid>
 python -m finlab cloud delete <sid>     # remove strategy + schedule (history preserved)
 python -m finlab cloud status           # monthly budget / tier usage
