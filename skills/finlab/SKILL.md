@@ -127,6 +127,8 @@ print(f"CAGR: {stats['cagr']:.2%}")
 print(f"Sharpe: {stats['monthly_sharpe']:.2f}")
 print(f"MDD: {stats['max_drawdown']:.2%}")
 
+# Benchmark stats (finlab >= 2.0.17): same keys via report.get_benchmark_stats()
+
 # 6. Write the FinLab-generated HTML report (REQUIRED — do not hand-roll your own HTML)
 report.to_html("report.html")
 print("Open report.html to inspect equity curve, monthly returns, drawdown, and trade list.")
@@ -253,6 +255,12 @@ stats = report.get_stats()
 print(f"CAGR: {stats['cagr']:.2%}")           # 'cagr' not 'annual_return'
 print(f"Sharpe: {stats['monthly_sharpe']:.2f}") # 'monthly_sharpe' not 'sharpe_ratio'
 print(f"MDD: {stats['max_drawdown']:.2%}")     # same name
+
+# Benchmark comparison (finlab >= 2.0.17): same ffn keys, computed on the
+# market benchmark over the backtest period — no need to recompute from
+# market.get_benchmark()
+bench = report.get_benchmark_stats()
+print(f"Benchmark CAGR: {bench['cagr']:.2%} | MDD: {bench['max_drawdown']:.2%}")
 ```
 
 See [backtesting-reference.md](backtesting-reference.md) for complete `sim()` API.
