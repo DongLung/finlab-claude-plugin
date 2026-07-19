@@ -313,6 +313,11 @@ See [trading-reference.md](trading-reference.md) for complete broker setup and O
 
 Short version pointers for features added in recent releases. Each reference file tags the exact API with `(vX.Y.Z)`.
 
+**v2.0.15** (2026-07-18)
+- `df.sector(by=...)`: sector accessor now accepts a custom classification — dict / `pd.Series` (stock_id → group) or a time-varying `pd.DataFrame`; unlisted stocks are excluded. Works with all `sector.*` methods — see [dataframe-reference.md](dataframe-reference.md)
+- `df.sector.map(mapping)`: broadcast group-level scalars (e.g. sector weights) to full DataFrame shape for factor composition — see [dataframe-reference.md](dataframe-reference.md)
+- `df.weight.by_group(weights, by, default)`: allocate capital across sectors/groups — normalize holdings so each group's total equals its share; under-allocation stays in cash — see [dataframe-reference.md](dataframe-reference.md)
+
 **v2.0.12** (2026-06-01)
 - `sim()` / `hold_until()`: `trail_stop_activation` — require a minimum unrealized gain before `trail_stop` arms. See [backtesting-reference.md](backtesting-reference.md) and [dataframe-reference.md](dataframe-reference.md)
 - `report.to_html(path, title=...)`: standalone HTML now sets browser-tab title + FinLab favicon; pass `title` to disambiguate multi-strategy report folders — see [backtesting-reference.md](backtesting-reference.md)

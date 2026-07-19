@@ -774,6 +774,26 @@ df.sector.winsorize(lower=0.01, upper=0.99)
 df.sector.bucket(n=5)
 ```
 
+**Custom classification** *(v2.0.15)* — call the accessor with `by` to replace the default `security_categories` industry map. Works with every `sector.*` method:
+
+```python
+my_map = {'2330': 'AI供應鏈', '2317': 'AI供應鏈', '2882': '金融'}
+roe.sector(my_map).rank()          # dict: stock_id -> group
+roe.sector(my_series).rank()       # pd.Series indexed by stock_id
+roe.sector(theme_df).rank()        # time-varying: DataFrame (index=dates, columns=stock_ids)
+```
+
+Stocks not listed in `by` are excluded (NaN in the result) — a custom map defines the universe you care about. Only single-label membership is supported (one group per stock per date).
+
+**Sector-value broadcasting** *(v2.0.15)* — `df.sector.map(mapping)` broadcasts group-level scalars to the full DataFrame shape, for composing with factor scores:
+
+```python
+# Tilt within-industry ranks by a per-industry conviction weight
+score = roe.sector.rank() * roe.sector.map({'半導體': 1.2, '金融保險': 0.8})
+```
+
+Groups missing from `mapping` become NaN; NaN cells in the source stay NaN.
+
 **Example:**
 ```python
 from finlab import data
@@ -802,7 +822,8 @@ cheap_bucket = pb.sector.bucket(5) == 0
 
 ```python
 df.weight.cap_industry(max_weight)
-df.weight.clip_by_volume(total_fund, max_participation_ratio)
+df.weight.clip_by_volume(total_fund, max_participation_ratio, volume=None, window=20)
+df.weight.by_group(weights, by=None, default=0.0)
 df.weight.inverse_volatility(window=60)
 df.weight.risk_parity(window=60)
 df.weight.correlation(diversify=True)
@@ -814,7 +835,8 @@ df.weight.drawdown_control(max_drawdown=0.1)
 | Method | Purpose |
 |--------|---------|
 | `cap_industry(max_weight)` | Cap the total weight per industry; redistribute excess proportionally to other holdings |
-| `clip_by_volume(total_fund, max_participation_ratio)` | Clip per-stock weight so the traded notional stays within `max_participation_ratio` of average daily dollar volume |
+| `clip_by_volume(total_fund, max_participation_ratio, volume, window)` | Clip per-stock weight so the traded notional stays within `max_participation_ratio` of average daily dollar volume; `window` (default 20) sets the ADV lookback days, `volume` overrides the dollar-volume source |
+| `by_group(weights, by, default)` *(v2.0.15)* | Allocate capital across groups: normalize holdings within each group so the group total equals its share in `weights` (e.g. `{'半導體': 0.5, '金融保險': 0.3}`). `by` accepts the same custom classification as `sector(by=...)`; `default` is the share for unlisted groups. Shares summing below 1 leave cash; a group with no holdings that day stays in cash; sums above 1 raise `ValueError` |
 | `inverse_volatility(window)` | Reweight so lower-volatility stocks get higher weights (1/σ scaling) |
 | `risk_parity(window)` | Equalize each holding's risk contribution |
 | `correlation(diversify=True)` | Adjust weights using correlation structure — `True` diversifies, `False` concentrates |
